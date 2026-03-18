@@ -1,0 +1,1524 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Church Post Generator — AI</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{--o:#FF5A08;--om:#FB8233;--ol:#FF9A5C;--op:#FFD4B8;--cream:#FFEDDE;--dark:#08030A;--dark2:#120618;--dark3:#1C0A28;--border:rgba(255,90,8,0.15);--green:#3ECFA3;--purple:#7C3AED;--pink:#EC4899;--wh:#25D366}
+html,body{height:100%;background:var(--dark);color:var(--cream);font-family:'DM Sans',sans-serif;overflow-x:hidden}
+body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:9999;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E");background-size:180px;opacity:.025}
+.app{display:grid;grid-template-columns:400px 1fr;height:100vh;overflow:hidden}
+
+/* ─ SIDEBAR ─ */
+.sidebar{background:var(--dark2);border-right:0.5px solid var(--border);display:flex;flex-direction:column;overflow:hidden}
+.sb-head{padding:14px 20px;border-bottom:0.5px solid var(--border);display:flex;align-items:center;gap:10px}
+.logo-mk{width:30px;height:30px;background:linear-gradient(135deg,var(--purple),var(--o));border-radius:7px;display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-size:12px;font-weight:800;color:#fff;flex-shrink:0}
+.logo-tx{font-family:'Syne',sans-serif;font-size:14px;font-weight:700}.logo-tx span{color:var(--o)}
+.sb-head-right{margin-left:auto;display:flex;gap:6px;align-items:center}
+.badge{font-size:9px;padding:2px 7px;border-radius:99px;background:rgba(124,58,237,0.2);border:0.5px solid rgba(124,58,237,0.4);color:#C4B5FD;font-family:'DM Mono',monospace}
+.icon-btn{width:28px;height:28px;border-radius:6px;background:rgba(255,237,222,0.05);border:0.5px solid rgba(255,237,222,0.1);color:rgba(255,237,222,0.5);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:14px;transition:all .2s}
+.icon-btn:hover{background:rgba(255,90,8,0.12);border-color:rgba(255,90,8,0.3);color:var(--ol)}
+
+.sb-body{flex:1;overflow-y:auto;padding:16px 20px;scrollbar-width:thin;scrollbar-color:rgba(255,90,8,0.15) transparent}
+.sb-body::-webkit-scrollbar{width:3px}.sb-body::-webkit-scrollbar-thumb{background:rgba(255,90,8,0.15);border-radius:3px}
+.sec{margin-bottom:16px}
+.sec-hd{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.18em;text-transform:uppercase;color:rgba(255,90,8,0.6);margin-bottom:9px;display:flex;align-items:center;gap:6px}
+.sec-hd::before{content:'';display:inline-block;width:12px;height:1px;background:var(--o)}
+.step-n{display:inline-flex;align-items:center;justify-content:center;width:14px;height:14px;background:rgba(255,90,8,0.15);border-radius:50%;font-size:8px;color:var(--o);flex-shrink:0}
+
+/* Upload */
+.upload-zone{border:1.5px dashed rgba(255,90,8,0.3);border-radius:10px;padding:16px;text-align:center;cursor:pointer;transition:all .2s;background:rgba(255,90,8,0.02);position:relative;min-height:100px}
+.upload-zone:hover,.upload-zone.drag{border-color:var(--o);background:rgba(255,90,8,0.06)}
+.upload-zone.ok{border-style:solid;border-color:rgba(255,90,8,0.4)}
+.upload-zone input{position:absolute;inset:0;opacity:0;cursor:pointer;z-index:2}
+.upload-ic{font-size:24px;display:block;margin-bottom:4px}.upload-mt{font-size:12px;font-weight:500;color:var(--cream)}.upload-sb{font-size:10px;color:rgba(255,237,222,0.35);margin-top:2px}
+.prev-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:10px}
+.prev-item{position:relative;aspect-ratio:1;background:var(--dark3);border-radius:7px;overflow:hidden;border:0.5px solid rgba(255,237,222,0.08)}
+.prev-item img{width:100%;height:100%;object-fit:cover;display:block}
+.rm-btn{position:absolute;top:3px;right:3px;width:17px;height:17px;background:rgba(0,0,0,.75);border:none;border-radius:50%;color:rgba(255,255,255,.7);font-size:9px;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.rm-btn:hover{background:rgba(220,38,38,.85);color:#fff}
+.st-badge{position:absolute;bottom:3px;left:3px;font-size:8px;padding:2px 4px;border-radius:3px;font-family:'DM Mono',monospace;font-weight:600}
+.st-p{background:rgba(0,0,0,.7);color:rgba(255,237,222,.5)}.st-r{background:rgba(255,90,8,.85);color:#fff;animation:pulse 1s infinite}.st-d{background:rgba(62,207,163,.85);color:#fff}.st-e{background:rgba(220,38,38,.85);color:#fff}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.6}}
+
+.div{height:0.5px;background:rgba(255,90,8,0.1);margin:14px 0}
+
+/* Fields */
+.field{margin-bottom:9px}
+.field label{font-size:10px;font-weight:500;color:rgba(255,237,222,.5);display:flex;align-items:center;justify-content:space-between;margin-bottom:5px}
+.ai-tag{font-size:9px;padding:1px 5px;border-radius:99px;background:rgba(124,58,237,.15);border:0.5px solid rgba(124,58,237,.3);color:#C4B5FD}
+.field input,.field select,.field textarea{width:100%;background:rgba(255,237,222,.04);border:0.5px solid rgba(255,237,222,.1);border-radius:6px;padding:7px 10px;font-size:12px;color:var(--cream);font-family:'DM Sans',sans-serif;outline:none;transition:border-color .2s;resize:none}
+.field input:focus,.field select:focus,.field textarea:focus{border-color:rgba(255,90,8,.45);background:rgba(255,90,8,.03)}
+.field textarea{min-height:50px;line-height:1.5}.field select{cursor:pointer;appearance:none}.field select option{background:var(--dark2)}
+
+/* Styles */
+.style-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:5px}
+.s-btn{padding:8px 6px;border-radius:7px;border:0.5px solid rgba(255,237,222,.1);cursor:pointer;transition:all .2s;background:rgba(255,255,255,.02);text-align:center}
+.s-btn:hover{border-color:rgba(255,90,8,.3);background:rgba(255,90,8,.04)}.s-btn.on{border-color:var(--o);background:rgba(255,90,8,.1)}
+.s-btn-ic{font-size:15px;display:block;margin-bottom:2px}.s-btn-nm{font-size:9px;font-weight:600;color:var(--cream)}.s-btn-sb{font-size:8px;color:rgba(255,237,222,.35);margin-top:1px}
+
+/* Palette */
+.palette{display:flex;gap:5px;flex-wrap:wrap}
+.sw{width:22px;height:22px;border-radius:50%;cursor:pointer;border:2px solid transparent;transition:all .2s;flex-shrink:0;position:relative}
+.sw.on{border-color:#fff;transform:scale(1.2)}.sw:hover{transform:scale(1.1)}
+.sw.on::after{content:'✓';position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:9px;color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.8)}
+
+/* API Status */
+.api-row{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
+.api-pill{display:flex;align-items:center;gap:4px;font-size:9px;padding:2px 8px;border-radius:99px;border:0.5px solid;font-family:'DM Mono',monospace}
+.api-pill.ok{background:rgba(62,207,163,.1);border-color:rgba(62,207,163,.3);color:var(--green)}.api-pill.ok .api-dot{background:var(--green)}
+.api-pill.err{background:rgba(220,38,38,.1);border-color:rgba(220,38,38,.3);color:#F87171}.api-pill.err .api-dot{background:#F87171}
+.api-dot{width:5px;height:5px;border-radius:50%;flex-shrink:0}
+
+/* Sidebar footer */
+.sb-foot{padding:12px 20px;border-top:0.5px solid var(--border);flex-shrink:0;display:flex;flex-direction:column;gap:8px}
+.btn-gen{width:100%;padding:13px;color:#fff;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:700;border:none;border-radius:7px;cursor:pointer;transition:all .2s;display:flex;align-items:center;justify-content:center;gap:8px;position:relative;overflow:hidden;box-shadow:0 4px 20px rgba(124,58,237,.3)}
+.btn-gen::before{content:'';position:absolute;inset:0;background:linear-gradient(90deg,#7C3AED,#FF5A08,#EC4899,#7C3AED);background-size:300% 100%;animation:gf 3s linear infinite;opacity:.95}
+.btn-gen:hover{transform:translateY(-2px);box-shadow:0 8px 28px rgba(124,58,237,.5)}.btn-gen:disabled{opacity:.5;cursor:not-allowed;transform:none}
+.btn-gen-lbl{position:relative;z-index:1;display:flex;align-items:center;gap:7px}
+@keyframes gf{0%{background-position:0%}100%{background-position:300%}}
+.bspin{width:13px;height:13px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .65s linear infinite;display:none}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* WhatsApp button */
+.btn-wa{width:100%;padding:10px;color:#fff;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;border:none;border-radius:7px;cursor:pointer;transition:all .2s;display:flex;align-items:center;justify-content:center;gap:7px;background:#1A472A;border:0.5px solid rgba(37,211,102,.3);display:none}
+.btn-wa:hover{background:#25D366;transform:translateY(-1px)}
+.btn-wa svg{width:16px;height:16px;fill:#fff;flex-shrink:0}
+
+/* ─ CANVAS AREA ─ */
+.canvas-area{display:flex;flex-direction:column;background:#000;overflow:hidden}
+.toolbar{display:flex;align-items:center;justify-content:space-between;padding:9px 20px;border-bottom:0.5px solid rgba(255,255,255,.06);background:rgba(0,0,0,.5);flex-shrink:0;backdrop-filter:blur(12px)}
+.tb-left{display:flex;align-items:center;gap:9px}
+.fmt-btns{display:flex;gap:3px}
+.fmt-btn{padding:4px 9px;border-radius:4px;font-size:10px;font-weight:600;cursor:pointer;border:0.5px solid rgba(255,255,255,.1);color:rgba(255,255,255,.45);background:transparent;font-family:'DM Mono',monospace;letter-spacing:.03em;transition:all .2s}
+.fmt-btn.on{background:rgba(124,58,237,.25);border-color:rgba(124,58,237,.5);color:#C4B5FD}
+.canvas-info{font-family:'DM Mono',monospace;font-size:9px;color:rgba(255,255,255,.25)}
+.live-badge{display:none;align-items:center;gap:4px;font-size:9px;color:var(--green);font-family:'DM Mono',monospace}.live-badge.show{display:flex}
+.ldot{width:5px;height:5px;border-radius:50%;background:var(--green);animation:bk 1.5s infinite}
+@keyframes bk{0%,100%{opacity:1}50%{opacity:.3}}
+.tb-right{display:flex;gap:6px}
+.tbtn{padding:6px 13px;border-radius:5px;font-size:11px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;border:none;transition:all .2s;display:flex;align-items:center;gap:5px}
+.tbtn-dl{background:linear-gradient(90deg,var(--purple),var(--o));color:#fff}.tbtn-dl:hover{opacity:.85;transform:translateY(-1px)}
+.tbtn-cp{background:rgba(255,255,255,.07);color:rgba(255,255,255,.6);border:0.5px solid rgba(255,255,255,.1)!important}.tbtn-cp:hover{background:rgba(255,255,255,.12);color:#fff}
+.tbtn-wa{background:#1A472A;color:#fff;border:0.5px solid rgba(37,211,102,.3)!important;display:none}.tbtn-wa:hover{background:#25D366}
+.tbtn-wa svg{width:13px;height:13px;fill:#fff}
+
+.canvas-wrap{flex:1;display:flex;align-items:center;justify-content:center;overflow:hidden;position:relative;background:radial-gradient(ellipse at 30% 30%,rgba(124,58,237,.05) 0%,transparent 60%),radial-gradient(ellipse at 70% 70%,rgba(255,90,8,.04) 0%,transparent 60%)}
+.canvas-wrap canvas{border-radius:10px;max-height:calc(100vh - 150px);max-width:calc(100% - 40px);box-shadow:0 32px 100px rgba(0,0,0,.9),0 0 0 0.5px rgba(255,255,255,.05);display:block;transition:opacity .3s,filter .3s}
+.canvas-wrap canvas.gen{opacity:.2;filter:blur(4px)}
+
+.gen-ov{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none;opacity:0;transition:opacity .3s;flex-direction:column;gap:14px}
+.gen-ov.show{opacity:1}
+.gen-ring{width:48px;height:48px;border:3px solid rgba(124,58,237,.2);border-top-color:var(--purple);border-radius:50%;animation:spin .8s linear infinite}
+.gen-steps{display:flex;flex-direction:column;gap:6px;align-items:center}
+.gen-step{font-size:11px;color:rgba(255,237,222,.4);font-family:'DM Mono',monospace;opacity:0;transform:translateY(5px);transition:all .4s}
+.gen-step.active{opacity:1;color:var(--cream);transform:translateY(0)}.gen-step.done{opacity:.4;color:var(--green)}.gen-step.done::before{content:'✓ '}
+
+.empty-st{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;pointer-events:none}
+.empty-st.gone{display:none}
+.empty-icon{font-size:48px;animation:fl 3s ease-in-out infinite}
+@keyframes fl{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+.empty-txt{font-size:12px;font-weight:300;color:rgba(255,237,222,.25);text-align:center;max-width:200px;line-height:1.7}
+
+/* Caption panel */
+.cap-panel{padding:10px 20px;border-top:0.5px solid rgba(255,255,255,.06);background:rgba(0,0,0,.4);flex-shrink:0;backdrop-filter:blur(10px);display:none}
+.cap-inner{display:flex;align-items:flex-start;gap:10px}
+.cap-lbl{font-size:9px;padding:2px 6px;border-radius:3px;background:rgba(124,58,237,.15);border:0.5px solid rgba(124,58,237,.25);color:#C4B5FD;font-family:'DM Mono',monospace;white-space:nowrap;margin-top:1px}
+.cap-txt{font-size:11px;line-height:1.6;color:rgba(255,237,222,.65);flex:1;min-width:0;max-height:48px;overflow:hidden;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical}
+.cap-tags{font-size:9px;color:rgba(255,90,8,.55);font-family:'DM Mono',monospace;margin-top:2px}
+.cap-copy{flex-shrink:0;padding:4px 9px;background:rgba(255,90,8,.1);border:0.5px solid rgba(255,90,8,.25);border-radius:4px;font-size:9px;color:var(--ol);cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .2s}
+.cap-copy:hover{background:rgba(255,90,8,.2)}
+
+/* ─ MODALS ─ */
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:1000;display:none;align-items:center;justify-content:center;backdrop-filter:blur(6px)}
+.modal-bg.open{display:flex}
+.modal{background:var(--dark2);border:0.5px solid var(--border);border-radius:14px;padding:28px;width:440px;max-width:90vw;position:relative;box-shadow:0 24px 80px rgba(0,0,0,.8)}
+.modal h3{font-family:'Syne',sans-serif;font-size:18px;font-weight:700;margin-bottom:6px;color:var(--cream)}
+.modal p{font-size:12px;color:rgba(255,237,222,.45);margin-bottom:22px;line-height:1.6}
+.modal .close-btn{position:absolute;top:16px;right:16px;width:26px;height:26px;border-radius:50%;background:rgba(255,255,255,.06);border:0.5px solid rgba(255,255,255,.1);color:rgba(255,237,222,.5);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:12px;transition:all .2s}
+.modal .close-btn:hover{background:rgba(255,90,8,.15);color:var(--ol)}
+
+.key-field{margin-bottom:14px}
+.key-field label{font-size:11px;font-weight:500;color:rgba(255,237,222,.55);display:block;margin-bottom:6px}
+.key-field .hint{font-size:10px;color:rgba(255,237,222,.3);margin-top:4px}
+.key-field .hint a{color:rgba(255,90,8,.7);text-decoration:none}
+.key-input-wrap{position:relative;display:flex;gap:6px}
+.key-input-wrap input{flex:1;background:rgba(255,237,222,.04);border:0.5px solid rgba(255,237,222,.1);border-radius:6px;padding:9px 12px;font-size:12px;color:var(--cream);font-family:'DM Mono',monospace;outline:none;transition:border-color .2s}
+.key-input-wrap input:focus{border-color:rgba(255,90,8,.45)}
+.key-input-wrap input.set{border-color:rgba(62,207,163,.4);background:rgba(62,207,163,.05)}
+.toggle-vis{padding:0 10px;background:rgba(255,237,222,.05);border:0.5px solid rgba(255,237,222,.1);border-radius:6px;color:rgba(255,237,222,.4);cursor:pointer;font-size:12px;transition:all .2s;white-space:nowrap}
+.toggle-vis:hover{color:var(--cream)}
+.btn-save-keys{width:100%;padding:11px;background:var(--o);color:#fff;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:700;border:none;border-radius:7px;cursor:pointer;margin-top:6px;transition:all .2s}
+.btn-save-keys:hover{background:var(--om);transform:translateY(-1px)}
+.key-status{text-align:center;font-size:11px;margin-top:10px;min-height:16px;font-family:'DM Mono',monospace}
+.key-status.ok{color:var(--green)}.key-status.err{color:#F87171}
+
+/* WhatsApp modal */
+.wa-modal input[type=tel]{width:100%;background:rgba(255,237,222,.04);border:0.5px solid rgba(255,237,222,.1);border-radius:6px;padding:10px 12px;font-size:14px;color:var(--cream);font-family:'DM Mono',monospace;outline:none;margin-bottom:12px;transition:border-color .2s}
+.wa-modal input[type=tel]:focus{border-color:rgba(37,211,102,.4)}
+.btn-wa-send{width:100%;padding:13px;background:#25D366;color:#fff;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:700;border:none;border-radius:7px;cursor:pointer;transition:all .2s;display:flex;align-items:center;justify-content:center;gap:8px}
+.btn-wa-send:hover{background:#128C7E;transform:translateY(-1px)}
+.wa-preview{background:rgba(255,237,222,.03);border:0.5px solid rgba(255,237,222,.08);border-radius:6px;padding:12px;font-size:11px;color:rgba(255,237,222,.55);line-height:1.6;max-height:120px;overflow:hidden;display:-webkit-box;-webkit-line-clamp:5;-webkit-box-orient:vertical;margin-bottom:12px}
+
+/* Toast */
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(8px);background:rgba(18,6,24,.95);border:0.5px solid rgba(124,58,237,.3);border-radius:7px;padding:9px 18px;font-size:12px;color:var(--cream);z-index:9998;opacity:0;transition:all .25s;pointer-events:none;white-space:nowrap;backdrop-filter:blur(12px)}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+@media(max-width:900px){.app{grid-template-columns:1fr;height:auto;overflow:auto}body{overflow:auto}}
+</style>
+</head>
+<body>
+<div class="app">
+
+<!-- ── SIDEBAR ── -->
+<aside class="sidebar">
+  <div class="sb-head">
+    <div class="logo-mk">AI</div>
+    <div class="logo-tx">Church Post <span>Generator</span></div>
+    <div class="sb-head-right">
+      <span class="badge">PRO</span>
+      <button class="icon-btn" onclick="openKeys()" title="Configurar chaves de API">⚙️</button>
+    </div>
+  </div>
+
+  <div class="sb-body">
+    <!-- FOTOS -->
+    <div class="sec">
+      <p class="sec-hd"><span class="step-n">1</span> Fotos (até 3 pregadores)</p>
+      <div class="upload-zone" id="upZ">
+        <input type="file" id="photoIn" accept="image/*" multiple>
+        <span class="upload-ic">📸</span>
+        <div class="upload-mt">Arraste 1, 2 ou 3 fotos</div>
+        <div class="upload-sb">PNG · JPG · Retrato recomendado</div>
+      </div>
+      <div class="prev-grid" id="prevGrid"></div>
+    </div>
+
+    <div class="div"></div>
+
+    <!-- INFORMAÇÕES -->
+    <div class="sec">
+      <p class="sec-hd"><span class="step-n">2</span> Informações</p>
+      <div class="field">
+        <label>Tipo de evento</label>
+        <select id="tipo">
+          <option value="culto">Culto Semanal</option>
+          <option value="jovens">Evento de Jovens</option>
+          <option value="conferencia">Conferência</option>
+          <option value="vigilia">Vigília / Noite de Oração</option>
+          <option value="batismo">Batismo</option>
+          <option value="missoes">Culto de Missões</option>
+          <option value="apostolico">Culto Apostólico</option>
+          <option value="especial">Evento Especial</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Nome(s) do(s) pregador(es)</label>
+        <input type="text" id="pregadores" placeholder="Ex: Pastor João · Pr. Maria">
+      </div>
+      <div class="field">
+        <label>Título do evento</label>
+        <input type="text" id="titulo" placeholder="Revival Night, Noite Apostólica...">
+      </div>
+      <div class="field">
+        <label>Data e horário</label>
+        <input type="text" id="dataHora" placeholder="Sexta · 20h · 25 Jul">
+      </div>
+      <div class="field">
+        <label>Local</label>
+        <input type="text" id="local" placeholder="Rua Principal, 123 — São Paulo">
+      </div>
+      <div class="field">
+        <label>Frase / tema <span class="ai-tag">✦ IA cria se vazio</span></label>
+        <textarea id="frase" placeholder="Opcional — IA cria se deixar em branco"></textarea>
+      </div>
+    </div>
+
+    <div class="div"></div>
+
+    <!-- VISUAL -->
+    <div class="sec">
+      <p class="sec-hd"><span class="step-n">3</span> Estilo visual</p>
+      <div class="field" style="margin-bottom:10px">
+        <label>Template</label>
+        <div class="style-grid">
+          <div class="s-btn on" data-s="revival" onclick="pickStyle(this)"><span class="s-btn-ic">🔥</span><div class="s-btn-nm">Revival</div><div class="s-btn-sb">Impacto</div></div>
+          <div class="s-btn" data-s="jovens" onclick="pickStyle(this)"><span class="s-btn-ic">⚡</span><div class="s-btn-nm">Jovens</div><div class="s-btn-sb">Neon glow</div></div>
+          <div class="s-btn" data-s="conferencia" onclick="pickStyle(this)"><span class="s-btn-ic">👑</span><div class="s-btn-nm">Conferência</div><div class="s-btn-sb">Premium</div></div>
+          <div class="s-btn" data-s="magazine" onclick="pickStyle(this)"><span class="s-btn-ic">📰</span><div class="s-btn-nm">Magazine</div><div class="s-btn-sb">Editorial</div></div>
+          <div class="s-btn" data-s="clean" onclick="pickStyle(this)"><span class="s-btn-ic">✨</span><div class="s-btn-nm">Clean</div><div class="s-btn-sb">Minimalista</div></div>
+          <div class="s-btn" data-s="apostolico" onclick="pickStyle(this)"><span class="s-btn-ic">🌙</span><div class="s-btn-nm">Apostólico</div><div class="s-btn-sb">Círculos</div></div>
+        </div>
+      </div>
+      <div class="field">
+        <label>Cor de destaque</label>
+        <div class="palette">
+          <div class="sw on" style="background:linear-gradient(135deg,#FF5A08,#FF8C3A)" data-c="orange" onclick="pickColor(this)"></div>
+          <div class="sw" style="background:linear-gradient(135deg,#7C3AED,#A78BFA)" data-c="purple" onclick="pickColor(this)"></div>
+          <div class="sw" style="background:linear-gradient(135deg,#1D4ED8,#60A5FA)" data-c="blue" onclick="pickColor(this)"></div>
+          <div class="sw" style="background:linear-gradient(135deg,#065F46,#10B981)" data-c="green" onclick="pickColor(this)"></div>
+          <div class="sw" style="background:linear-gradient(135deg,#9D174D,#F472B6)" data-c="pink" onclick="pickColor(this)"></div>
+          <div class="sw" style="background:linear-gradient(135deg,#78350F,#F59E0B)" data-c="gold" onclick="pickColor(this)"></div>
+          <div class="sw" style="background:linear-gradient(135deg,#881337,#FB7185)" data-c="red" onclick="pickColor(this)"></div>
+          <div class="sw" style="background:linear-gradient(135deg,#0F172A,#475569)" data-c="slate" onclick="pickColor(this)"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- API STATUS -->
+    <div class="sec">
+      <p class="sec-hd">APIs <button onclick="openKeys()" style="font-size:9px;padding:1px 6px;border-radius:3px;background:rgba(255,90,8,.12);border:0.5px solid rgba(255,90,8,.25);color:var(--ol);cursor:pointer;font-family:'DM Sans',sans-serif;margin-left:6px">Configurar ⚙️</button></p>
+      <div class="api-row" id="apiRow">
+        <div class="api-pill err" id="pill-bg"><span class="api-dot"></span>remove.bg</div>
+        <div class="api-pill err" id="pill-ai"><span class="api-dot"></span>Claude AI</div>
+      </div>
+    </div>
+
+    <!-- WhatsApp -->
+    <div class="sec">
+      <p class="sec-hd">WhatsApp</p>
+      <div class="field">
+        <label>Número (com DDD e código do país)</label>
+        <input type="tel" id="waPhone" placeholder="Ex: 5511999999999">
+      </div>
+    </div>
+
+  </div>
+
+  <div class="sb-foot">
+    <button class="btn-gen" id="genBtn" onclick="generate()">
+      <span class="btn-gen-lbl"><span id="bIc">✦</span><span id="bTx">Gerar Post com IA</span><span class="bspin" id="bSp"></span></span>
+    </button>
+    <button class="btn-wa" id="btnWa" onclick="openWa()">
+      <svg viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+      Enviar pelo WhatsApp
+    </button>
+  </div>
+</aside>
+
+<!-- ── CANVAS AREA ── -->
+<main class="canvas-area">
+  <div class="toolbar">
+    <div class="tb-left">
+      <div class="fmt-btns">
+        <button class="fmt-btn on" data-f="post" onclick="setFmt(this)">4:5 Post</button>
+        <button class="fmt-btn" data-f="story" onclick="setFmt(this)">9:16 Story</button>
+        <button class="fmt-btn" data-f="square" onclick="setFmt(this)">1:1 Feed</button>
+      </div>
+      <span class="canvas-info" id="sizeInfo">1080 × 1350 px</span>
+      <span class="live-badge" id="liveBadge"><span class="ldot"></span>Gerado</span>
+    </div>
+    <div class="tb-right">
+      <button class="tbtn tbtn-cp" onclick="copyCaption()">📋 Legenda</button>
+      <button class="tbtn tbtn-wa" id="tbtnWa" onclick="openWa()">
+        <svg viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+        WhatsApp
+      </button>
+      <button class="tbtn tbtn-dl" onclick="downloadPost()">⬇ Baixar PNG</button>
+    </div>
+  </div>
+
+  <div class="canvas-wrap">
+    <div class="empty-st" id="emptySt">
+      <div class="empty-icon">🎨</div>
+      <div class="empty-txt">Suba as fotos, preencha os dados e clique em Gerar Post</div>
+    </div>
+    <div class="gen-ov" id="genOv">
+      <div class="gen-ring"></div>
+      <div class="gen-steps">
+        <div class="gen-step" id="st0">Removendo fundo das imagens...</div>
+        <div class="gen-step" id="st1">Gerando legenda com IA...</div>
+        <div class="gen-step" id="st2">Montando layout profissional...</div>
+        <div class="gen-step" id="st3">Aplicando efeitos visuais...</div>
+      </div>
+    </div>
+    <canvas id="C" width="1080" height="1350"></canvas>
+  </div>
+
+  <div class="cap-panel" id="capPanel">
+    <div class="cap-inner">
+      <span class="cap-lbl">IA</span>
+      <div style="flex:1;min-width:0">
+        <div class="cap-txt" id="capTxt"></div>
+        <div class="cap-tags" id="capTags"></div>
+      </div>
+      <button class="cap-copy" onclick="copyCaption()">Copiar</button>
+    </div>
+  </div>
+</main>
+</div>
+
+<!-- ── MODAL: API KEYS ── -->
+<div class="modal-bg" id="keysModal">
+  <div class="modal">
+    <button class="close-btn" onclick="closeKeys()">✕</button>
+    <h3>⚙️ Chaves de API</h3>
+    <p>Configure suas chaves para ativar a remoção de fundo e a geração de legendas por IA. As chaves são salvas na sessão e não saem do seu computador.</p>
+
+    <div class="key-field">
+      <label>remove.bg — Remoção de fundo automática</label>
+      <div class="key-input-wrap">
+        <input type="password" id="keyBg" placeholder="Sua chave do remove.bg">
+        <button class="toggle-vis" onclick="toggleVis('keyBg',this)">👁 Ver</button>
+      </div>
+      <div class="hint">Crie grátis em <a href="https://www.remove.bg/api" target="_blank">remove.bg/api</a> · 50 imagens/mês gratuitas</div>
+    </div>
+
+    <div class="key-field">
+      <label>Anthropic Claude — Geração de legendas com IA</label>
+      <div class="key-input-wrap">
+        <input type="password" id="keyClaude" placeholder="sk-ant-...">
+        <button class="toggle-vis" onclick="toggleVis('keyClaude',this)">👁 Ver</button>
+      </div>
+      <div class="hint">Crie em <a href="https://console.anthropic.com" target="_blank">console.anthropic.com</a></div>
+    </div>
+
+    <button class="btn-save-keys" onclick="saveKeys()">Salvar e ativar chaves</button>
+    <div class="key-status" id="keyStatus"></div>
+  </div>
+</div>
+
+<!-- ── MODAL: WHATSAPP ── -->
+<div class="modal-bg" id="waModal">
+  <div class="modal wa-modal">
+    <button class="close-btn" onclick="closeWa()">✕</button>
+    <h3>
+      <svg style="width:20px;height:20px;fill:#25D366;vertical-align:middle;margin-right:6px" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+      Enviar pelo WhatsApp
+    </h3>
+    <p>A legenda gerada pela IA será enviada para o número informado. O post PNG pode ser baixado separadamente e anexado na conversa.</p>
+    <div class="wa-preview" id="waPreview">Gere um post primeiro para ver a legenda aqui.</div>
+    <input type="tel" id="waModalPhone" placeholder="Número com DDI · Ex: 5511999999999">
+    <button class="btn-wa-send" onclick="sendWa()">
+      <svg style="width:18px;height:18px;fill:#fff" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+      Abrir conversa no WhatsApp
+    </button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ══════════════════════════════════════════════════════════════════
+// CHURCH POST GENERATOR — Drawing Engine
+// ══════════════════════════════════════════════════════════════════
+
+const COLORS = {
+  orange:{a:'#FF5A08',b:'#FB8233',c:'#FF9A5C',d:'#FFD4B8',dk:'#1A0400'},
+  purple:{a:'#6D28D9',b:'#7C3AED',c:'#C4B5FD',d:'#EDE9FE',dk:'#0F0520'},
+  blue:  {a:'#1E3A8A',b:'#2563EB',c:'#93C5FD',d:'#BFDBFE',dk:'#060E24'},
+  green: {a:'#064E3B',b:'#059669',c:'#6EE7B7',d:'#D1FAE5',dk:'#010E09'},
+  pink:  {a:'#831843',b:'#EC4899',c:'#F9A8D4',d:'#FCE7F3',dk:'#1F0410'},
+  gold:  {a:'#78350F',b:'#D97706',c:'#FCD34D',d:'#FEF3C7',dk:'#1C0D00'},
+  red:   {a:'#881337',b:'#E11D48',c:'#FDA4AF',d:'#FFE4E6',dk:'#1A0008'},
+  slate: {a:'#0F172A',b:'#475569',c:'#CBD5E1',d:'#F1F5F9',dk:'#030509'},
+};
+
+// ── UTILS ─────────────────────────────────────────────────────────
+function h2a(hex, a) {
+  const r = parseInt(hex.slice(1,3),16), g = parseInt(hex.slice(3,5),16), b = parseInt(hex.slice(5,7),16);
+  return `rgba(${r},${g},${b},${a})`;
+}
+
+function fitText(ctx, text, maxW, startSz, minSz=16) {
+  let sz = startSz;
+  while (sz > minSz) {
+    ctx.font = `800 ${sz}px Syne, sans-serif`;
+    if (ctx.measureText(text).width <= maxW) break;
+    sz -= 2;
+  }
+  return sz;
+}
+
+function wrapLines(ctx, text, maxW, font) {
+  ctx.font = font;
+  return text.split(' ').reduce((lines, word) => {
+    const cur = lines[lines.length - 1];
+    const test = cur ? cur + ' ' + word : word;
+    if (ctx.measureText(test).width > maxW && cur) { lines.push(word); }
+    else { lines[lines.length - 1] = test; }
+    return lines;
+  }, ['']);
+}
+
+function fitMultiline(ctx, text, maxW, startSz, minSz=20) {
+  let sz = startSz;
+  while (sz > minSz) {
+    ctx.font = `800 ${sz}px Syne, sans-serif`;
+    const lines = wrapLines(ctx, text, maxW, `800 ${sz}px Syne, sans-serif`);
+    const max = lines.reduce((m, l) => Math.max(m, ctx.measureText(l).width), 0);
+    if (max <= maxW) break;
+    sz -= 2;
+  }
+  return sz;
+}
+
+function gradientText(ctx, text, x, y, font, x0, y0, x1, y1, c1, c2) {
+  ctx.font = font;
+  const g = ctx.createLinearGradient(x0, y0, x1, y1);
+  g.addColorStop(0, c1); g.addColorStop(1, c2);
+  ctx.fillStyle = g;
+  ctx.fillText(text, x, y);
+}
+
+function text3D(ctx, text, x, y, font, fill, depth=8) {
+  ctx.font = font;
+  for (let i = depth; i > 0; i--) {
+    ctx.fillStyle = `rgba(0,0,0,${0.055 * i / depth})`;
+    ctx.fillText(text, x + i * 0.7, y + i * 0.7);
+  }
+  ctx.fillStyle = fill;
+  ctx.fillText(text, x, y);
+}
+
+function glow(ctx, x, y, r, col, a=0.2) {
+  const g = ctx.createRadialGradient(x, y, 0, x, y, r);
+  g.addColorStop(0, h2a(col, a)); g.addColorStop(1, 'rgba(0,0,0,0)');
+  ctx.fillStyle = g; ctx.fillRect(x - r, y - r, r * 2, r * 2);
+}
+
+function gridLines(ctx, W, H, col, a=0.05) {
+  ctx.save(); ctx.strokeStyle = h2a(col, a); ctx.lineWidth = 0.5;
+  for (let x = 0; x < W; x += 80) { ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,H); ctx.stroke(); }
+  for (let y = 0; y < H; y += 80) { ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(W,y); ctx.stroke(); }
+  ctx.restore();
+}
+
+function rings(ctx, x, y, col, n=4, baseR=60) {
+  for (let i = n; i > 0; i--) {
+    ctx.beginPath(); ctx.arc(x, y, baseR * i, 0, Math.PI * 2);
+    ctx.strokeStyle = h2a(col, 0.07 / i); ctx.lineWidth = 1; ctx.stroke();
+  }
+}
+
+function grain(ctx, W, H, a=0.035) {
+  for (let i = 0; i < W * H * 0.0015; i++) {
+    const x = Math.random()*W, y = Math.random()*H, v = Math.random()*255;
+    ctx.fillStyle = `rgba(${v},${v},${v},${a})`; ctx.fillRect(x,y,1.5,1.5);
+  }
+}
+
+function dnaBar(ctx, W, H, col, h=8) {
+  const g = ctx.createLinearGradient(0,0,W,0);
+  g.addColorStop(0, col.a); g.addColorStop(0.5, col.c); g.addColorStop(1, col.b);
+  ctx.fillStyle = g; ctx.fillRect(0, H - h, W, h);
+}
+
+function sparkles(ctx, W, H, col, n=14) {
+  for (let i = 0; i < n; i++) {
+    const x = Math.random()*W, y = Math.random()*H, s = 1.5 + Math.random()*3;
+    ctx.fillStyle = h2a(col, 0.2 + Math.random()*0.35);
+    ctx.beginPath(); ctx.arc(x, y, s, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle = h2a(col, 0.4);
+    ctx.fillRect(x - s*3, y - 0.5, s*6, 1); ctx.fillRect(x - 0.5, y - s*3, 1, s*6);
+  }
+}
+
+function watermark(ctx, W, H) {
+  ctx.fillStyle = 'rgba(255,255,255,0.22)';
+  ctx.font = `400 ${W*0.018}px DM Mono, monospace`;
+  ctx.textAlign = 'right'; ctx.textBaseline = 'alphabetic';
+  ctx.fillText('@designerdamissao · AI', W - W*0.04, H - W*0.025);
+}
+
+// ── PHOTO PLACEMENT ───────────────────────────────────────────────
+// Draws 1, 2, or 3 person images with professional positioning
+function placePhotos(ctx, W, H, images, mode) {
+  if (!images || images.length === 0) return;
+  const n = images.length;
+
+  // ── SINGLE PERSON ──────────────────────────────────────────────
+  if (n === 1) {
+    const img = images[0];
+    const iw = img.naturalWidth || img.width || 400;
+    const ih = img.naturalHeight || img.height || 600;
+
+    if (mode === 'revival') {
+      // RIGHT side, large — classic gospel poster style
+      const scale = Math.max(W * 0.82 / iw, H * 0.78 / ih);
+      const dw = iw * scale, dh = ih * scale;
+      ctx.drawImage(img, W * 0.12, H - dh, dw, dh);
+
+    } else if (mode === 'bottom') {
+      // Bottom center
+      const scale = Math.max(W / iw, H * 0.62 / ih);
+      const dw = iw * scale, dh = ih * scale;
+      ctx.drawImage(img, (W - dw) / 2, H - dh, dw, dh);
+
+    } else {
+      // 'full' — fill entire canvas (used by neon, conferencia, clean, apostolico)
+      const scale = Math.max(W / iw, H / ih);
+      const dw = iw * scale, dh = ih * scale;
+      ctx.drawImage(img, (W - dw) / 2, (H - dh) / 2, dw, dh);
+    }
+
+  // ── TWO PEOPLE ─────────────────────────────────────────────────
+  } else if (n === 2) {
+    images.forEach((img, idx) => {
+      const iw = img.naturalWidth || img.width || 400;
+      const ih = img.naturalHeight || img.height || 600;
+
+      if (mode === 'revival') {
+        // Side by side, anchored bottom, slight overlap in center
+        const scale = Math.max(W * 0.52 / iw, H * 0.72 / ih);
+        const dw = iw * scale, dh = ih * scale;
+        const dx = idx === 0 ? -dw * 0.08 : W - dw * 0.92;
+        ctx.drawImage(img, dx, H - dh, dw, dh);
+      } else {
+        // Full — side by side covering canvas
+        const scale = Math.max(W * 0.55 / iw, H * 0.65 / ih);
+        const dw = iw * scale, dh = ih * scale;
+        const dx = idx === 0 ? -dw * 0.05 : W - dw * 0.95;
+        ctx.drawImage(img, dx, H - dh, dw, dh);
+      }
+    });
+
+  // ── THREE PEOPLE ───────────────────────────────────────────────
+  } else if (n >= 3) {
+    if (mode === 'revival') {
+      // Main center-top, two flanking bottom
+      const main = images[0];
+      const mw = main.naturalWidth || main.width || 400;
+      const mh = main.naturalHeight || main.height || 600;
+      const ms = Math.max(W * 0.5 / mw, H * 0.55 / mh);
+      ctx.drawImage(main, (W - mw * ms) / 2, H * 0.12, mw * ms, mh * ms);
+
+      [images[1], images[2]].forEach((img, idx) => {
+        const iw = img.naturalWidth || img.width || 400;
+        const ih = img.naturalHeight || img.height || 600;
+        const s = Math.max(W * 0.36 / iw, H * 0.4 / ih);
+        const dw = iw * s, dh = ih * s;
+        const dx = idx === 0 ? -dw * 0.08 : W - dw * 0.92;
+        ctx.drawImage(img, dx, H - dh, dw, dh);
+      });
+    } else {
+      // Full — collage: main large, two smaller alongside
+      const main = images[0];
+      const mw = main.naturalWidth || main.width || 400;
+      const mh = main.naturalHeight || main.height || 600;
+      const ms = Math.max(W * 0.6 / mw, H * 0.7 / mh);
+      ctx.drawImage(main, W * 0.1, H - mh * ms, mw * ms, mh * ms);
+
+      [images[1], images[2]].forEach((img, idx) => {
+        const iw = img.naturalWidth || img.width || 400;
+        const ih = img.naturalHeight || img.height || 600;
+        const s = Math.max(W * 0.3 / iw, H * 0.35 / ih);
+        const dw = iw * s, dh = ih * s;
+        const dy = idx === 0 ? H - dh - H * 0.22 : H - dh;
+        ctx.drawImage(img, W - dw * 1.05, dy, dw, dh);
+      });
+    }
+  }
+}
+
+// ── BG GRADIENT WITH BOTTOM FADE ──────────────────────────────────
+function bgWithFade(ctx, W, H, col, type='radial') {
+  if (type === 'diagonal') {
+    const g = ctx.createLinearGradient(0, 0, W, H);
+    g.addColorStop(0, col.a); g.addColorStop(0.5, col.b); g.addColorStop(1, col.dk);
+    ctx.fillStyle = g;
+  } else {
+    const g = ctx.createLinearGradient(0, 0, W, H * 0.7);
+    g.addColorStop(0, col.a); g.addColorStop(0.45, col.b); g.addColorStop(1, col.dk);
+    ctx.fillStyle = g;
+  }
+  ctx.fillRect(0, 0, W, H);
+
+  // Bottom dark fade (makes text readable over photo)
+  const bf = ctx.createLinearGradient(0, H * 0.55, 0, H);
+  bf.addColorStop(0, 'rgba(0,0,0,0)'); bf.addColorStop(1, h2a(col.dk, 0.95));
+  ctx.fillStyle = bf; ctx.fillRect(0, 0, W, H);
+}
+
+// Photo left side fade
+function photoSideFade(ctx, W, H, col) {
+  const fl = ctx.createLinearGradient(0, 0, W * 0.5, 0);
+  fl.addColorStop(0, h2a(col.dk, 0.7)); fl.addColorStop(1, 'rgba(0,0,0,0)');
+  ctx.fillStyle = fl; ctx.fillRect(0, 0, W, H);
+}
+
+// ══════════════════════════════════════════════════════════════════
+// STYLE: REVIVAL NIGHT (orange fire, massive text behind person)
+// ══════════════════════════════════════════════════════════════════
+function drawRevival(C, W, H, images, data, col) {
+  const ctx = C.getContext('2d');
+  ctx.clearRect(0, 0, W, H);
+
+  // BG
+  bgWithFade(ctx, W, H, col);
+  gridLines(ctx, W, H, col.c, 0.05);
+
+  // HUGE BG WORD behind everything
+  if (data.titulo) {
+    ctx.save();
+    ctx.globalAlpha = 0.07;
+    const bgSz = fitText(ctx, data.titulo, W * 0.95, W * 0.35, 40);
+    ctx.font = `800 ${bgSz}px Syne, sans-serif`;
+    ctx.fillStyle = '#FFFFFF';
+    ctx.textAlign = 'center'; ctx.textBaseline = 'alphabetic';
+    ctx.fillText(data.titulo, W / 2, H * 0.52);
+    ctx.restore();
+  }
+
+  // PHOTO LAYER
+  if (images.length > 0) {
+    ctx.save();
+    placePhotos(ctx, W, H, images, 'revival');
+    photoSideFade(ctx, W, H, col);
+    ctx.restore();
+  }
+
+  // Glow orbs
+  glow(ctx, W * 0.15, H * 0.2, 420, col.c, 0.12);
+  glow(ctx, W * 0.85, H * 0.75, 350, col.b, 0.1);
+  sparkles(ctx, W, H, col.c, 14);
+
+  // ── TEXTS ──
+  ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
+
+  // Data/hora top
+  if (data.dataHora) {
+    const dhSz = fitText(ctx, data.dataHora, W * 0.85, W * 0.038, 16);
+    ctx.font = `600 ${dhSz}px DM Sans, sans-serif`;
+    ctx.fillStyle = 'rgba(255,255,255,0.88)';
+    ctx.fillText(data.dataHora.toLowerCase(), W * 0.065, H * 0.085);
+  }
+
+  // Title — massive auto-fit
+  if (data.titulo) {
+    const tSz = fitMultiline(ctx, data.titulo, W * 0.87, W * 0.19, 30);
+    const lines = wrapLines(ctx, data.titulo.toUpperCase(), W * 0.87, `800 ${tSz}px Syne, sans-serif`);
+    const startY = data.dataHora ? H * 0.18 : H * 0.14;
+    lines.forEach((line, i) => {
+      const isLast = i === lines.length - 1 && lines.length > 1;
+      ctx.save();
+      if (isLast) { ctx.globalAlpha = 0.88; ctx.transform(1, 0, -0.07, 1, 0, 0); }
+      text3D(ctx, line, W * 0.065, startY + i * tSz * 0.98, `800 ${tSz}px Syne, sans-serif`, '#FFFFFF', 10);
+      ctx.restore();
+    });
+    // Rule line
+    const rY = startY + lines.length * tSz * 0.98 + H * 0.016;
+    const rg = ctx.createLinearGradient(W * 0.065, 0, W * 0.7, 0);
+    rg.addColorStop(0, col.c); rg.addColorStop(1, 'rgba(0,0,0,0)');
+    ctx.fillStyle = rg; ctx.fillRect(W * 0.065, rY, W * 0.58, 4);
+  }
+
+  // Frase main
+  if (data.frase) {
+    const frSz = Math.min(W * 0.046, fitText(ctx, data.frase, W * 0.84, W * 0.046, 18));
+    const frFont = `500 ${frSz}px DM Sans, sans-serif`;
+    const frLines = wrapLines(ctx, data.frase, W * 0.84, frFont);
+    frLines.forEach((l, i) => {
+      gradientText(ctx, l, W * 0.065, H * 0.73 + i * frSz * 1.28,
+        frFont, W * 0.065, 0, W * 0.9, 0, 'rgba(255,255,255,0.95)', h2a(col.d, 0.85));
+    });
+  }
+
+  // Pregador white box (like Lagoinha/Revival style)
+  if (data.pregadores) {
+    const bx = W * 0.065, bw = W * 0.3, bh = H * 0.092;
+    const by = H - bh - H * 0.075;
+    ctx.save();
+    ctx.shadowColor = 'rgba(0,0,0,0.4)'; ctx.shadowBlur = 20;
+    ctx.fillStyle = 'rgba(255,255,255,0.96)';
+    ctx.beginPath();
+    if (ctx.roundRect) ctx.roundRect(bx, by, bw, bh, 6);
+    else ctx.rect(bx, by, bw, bh);
+    ctx.fill(); ctx.restore();
+    ctx.fillStyle = col.a; ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
+    const parts = data.pregadores.split(/[·\n,]/);
+    const nSz = fitText(ctx, parts[0].trim(), bw * 0.84, W * 0.036, 12);
+    ctx.font = `700 ${nSz}px DM Sans, sans-serif`;
+    parts.slice(0, 2).forEach((p, i) => ctx.fillText(p.trim(), bx + bw * 0.06, by + bh * (i === 0 ? 0.42 : 0.82)));
+  }
+
+  // Bottom marquee text
+  ctx.save(); ctx.font = `400 ${W * 0.024}px DM Sans, sans-serif`;
+  ctx.fillStyle = 'rgba(255,255,255,0.25)'; ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
+  ctx.fillText('welcome to the new  welcome to the new  welcome to the new  welcome to the new', -10, H - H * 0.025);
+  ctx.restore();
+
+  // Local bottom
+  if (data.local) {
+    ctx.font = `400 ${W * 0.024}px DM Mono, monospace`;
+    ctx.fillStyle = 'rgba(255,255,255,0.45)'; ctx.textAlign = 'center';
+    ctx.fillText(data.local.toUpperCase(), W / 2, H - H * 0.055);
+  }
+
+  grain(ctx, W, H, 0.035);
+  dnaBar(ctx, W, H, col, 8);
+  watermark(ctx, W, H);
+}
+
+// ══════════════════════════════════════════════════════════════════
+// STYLE: JOVENS (neon glow, aggressive layout like Aviva Jovem)
+// ══════════════════════════════════════════════════════════════════
+function drawJovens(C, W, H, images, data, col) {
+  const ctx = C.getContext('2d');
+  ctx.clearRect(0, 0, W, H);
+
+  // Dark bg
+  ctx.fillStyle = '#030108'; ctx.fillRect(0, 0, W, H);
+
+  // Photo with gritty overlay
+  if (images.length > 0) {
+    ctx.save(); ctx.globalAlpha = 0.5;
+    placePhotos(ctx, W, H, images, 'full');
+    ctx.restore();
+    const ov = ctx.createRadialGradient(W/2, H/2, 150, W/2, H/2, 900);
+    ov.addColorStop(0, 'rgba(3,1,8,0)'); ov.addColorStop(1, 'rgba(3,1,8,0.92)');
+    ctx.fillStyle = ov; ctx.fillRect(0,0,W,H);
+  }
+
+  // Neon glows
+  glow(ctx, W * 0.15, H * 0.2, 550, col.a, 0.22);
+  glow(ctx, W * 0.9, H * 0.75, 400, col.b, 0.2);
+  glow(ctx, W * 0.5, H * 0.45, 250, col.c, 0.08);
+  gridLines(ctx, W, H, col.c, 0.04);
+  sparkles(ctx, W, H, col.c, 22);
+
+  // Top tipo tag
+  if (data.tipo) {
+    ctx.font = `700 ${W * 0.028}px DM Mono, monospace`;
+    ctx.fillStyle = hex2a(col.c, 0.9);
+    ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
+    ctx.fillText(data.tipo.toUpperCase(), W * 0.065, H * 0.075);
+    ctx.fillStyle = col.a; ctx.fillRect(W * 0.065, H * 0.082, W * 0.12, 3);
+  }
+
+  // Title with neon layers
+  if (data.titulo) {
+    const tSz = fitMultiline(ctx, data.titulo, W * 0.87, W * 0.18, 28);
+    const lines = wrapLines(ctx, data.titulo.toUpperCase(), W * 0.87, `800 ${tSz}px Syne, sans-serif`);
+    const startY = H * 0.16;
+    lines.forEach((line, i) => {
+      ctx.save();
+      for (let g = 3; g > 0; g--) {
+        ctx.shadowBlur = g * 22; ctx.shadowColor = col.a;
+        ctx.globalAlpha = 0.12; ctx.font = `800 ${tSz}px Syne, sans-serif`;
+        ctx.fillStyle = col.a; ctx.fillText(line, W * 0.065, startY + i * tSz * 0.98);
+      }
+      ctx.globalAlpha = 1; ctx.shadowBlur = 18; ctx.shadowColor = col.c;
+      gradientText(ctx, line, W * 0.065, startY + i * tSz * 0.98,
+        `800 ${tSz}px Syne, sans-serif`, W*0.065, startY - tSz, W*0.9, startY + tSz*0.3,
+        '#FFFFFF', h2a(col.d, 0.9));
+      ctx.restore();
+    });
+    // Neon rule
+    const rY = startY + lines.length * tSz * 0.98 + H * 0.015;
+    ctx.save(); ctx.shadowColor = col.a; ctx.shadowBlur = 14;
+    const rg = ctx.createLinearGradient(W*0.065, 0, W*0.7, 0);
+    rg.addColorStop(0, col.a); rg.addColorStop(0.6, col.c); rg.addColorStop(1, 'rgba(0,0,0,0)');
+    ctx.fillStyle = rg; ctx.fillRect(W*0.065, rY, W*0.6, 3); ctx.restore();
+  }
+
+  // Frase
+  if (data.frase) {
+    const frSz = Math.min(W*0.044, fitText(ctx, data.frase, W*0.83, W*0.044, 18));
+    const frFont = `500 ${frSz}px DM Sans, sans-serif`;
+    const frLines = wrapLines(ctx, data.frase, W*0.83, frFont);
+    ctx.save(); ctx.shadowColor = col.c; ctx.shadowBlur = 10;
+    ctx.font = frFont; ctx.fillStyle = h2a(col.d, 0.9);
+    ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
+    frLines.forEach((l, i) => ctx.fillText(l, W*0.065, H*0.73 + i*(frSz*1.3)));
+    ctx.restore();
+  }
+
+  // Pregadores neon outline
+  if (data.pregadores) {
+    const pSz = fitText(ctx, data.pregadores, W*0.85, W*0.038, 16);
+    ctx.save(); ctx.shadowColor = col.a; ctx.shadowBlur = 20;
+    ctx.font = `700 ${pSz}px Syne, sans-serif`;
+    ctx.strokeStyle = h2a(col.a, 0.5); ctx.lineWidth = 2; ctx.lineJoin = 'round';
+    ctx.strokeText(data.pregadores.toUpperCase(), W*0.065, H*0.88);
+    ctx.fillStyle = col.c; ctx.fillText(data.pregadores.toUpperCase(), W*0.065, H*0.88);
+    ctx.restore();
+  }
+
+  if (data.dataHora) {
+    ctx.font = `500 ${W*0.03}px DM Mono, monospace`;
+    ctx.fillStyle = h2a(col.c, 0.8); ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
+    ctx.fillText(data.dataHora.toUpperCase(), W*0.065, H*0.93);
+  }
+
+  grain(ctx, W, H, 0.04);
+  ctx.save(); ctx.shadowColor = col.a; ctx.shadowBlur = 18;
+  dnaBar(ctx, W, H, col, 6); ctx.restore();
+  watermark(ctx, W, H);
+}
+// alias for hex2a used in jovens
+function hex2a(h, a) { return h2a(h, a); }
+
+// ══════════════════════════════════════════════════════════════════
+// STYLE: CONFERÊNCIA (premium dark, circles, apostolic feel)
+// ══════════════════════════════════════════════════════════════════
+function drawConferencia(C, W, H, images, data, col) {
+  const ctx = C.getContext('2d');
+  ctx.clearRect(0, 0, W, H);
+
+  ctx.fillStyle = '#060200'; ctx.fillRect(0, 0, W, H);
+
+  // Photo full bleed dark
+  if (images.length > 0) {
+    ctx.save(); ctx.globalAlpha = 0.55;
+    placePhotos(ctx, W, H, images, 'full');
+    ctx.restore();
+    const ov = ctx.createRadialGradient(W/2, H*0.42, W*0.1, W/2, H*0.42, W*0.9);
+    ov.addColorStop(0, 'rgba(0,0,0,0)'); ov.addColorStop(1, 'rgba(6,2,0,0.88)');
+    ctx.fillStyle = ov; ctx.fillRect(0,0,W,H);
+    const topB = ctx.createLinearGradient(0,0,0,H*0.35);
+    topB.addColorStop(0,'rgba(6,2,0,0.9)'); topB.addColorStop(1,'rgba(0,0,0,0)');
+    ctx.fillStyle = topB; ctx.fillRect(0,0,W,H);
+    const botB = ctx.createLinearGradient(0,H*0.55,0,H);
+    botB.addColorStop(0,'rgba(0,0,0,0)'); botB.addColorStop(1,'rgba(6,2,0,0.97)');
+    ctx.fillStyle = botB; ctx.fillRect(0,0,W,H);
+  }
+
+  // Decorative circles (apostolic style)
+  rings(ctx, W/2, H*0.5, col.b, 5, W*0.12);
+  glow(ctx, W/2, H*0.42, W*0.4, col.a, 0.1);
+
+  // Cinema bars
+  ctx.fillStyle = '#060200'; ctx.fillRect(0,0,W,H*0.065); ctx.fillRect(0,H*0.935,W,H*0.065);
+  const ts = ctx.createLinearGradient(0,0,W,0); ts.addColorStop(0,col.a); ts.addColorStop(1,col.b);
+  ctx.fillStyle = ts; ctx.fillRect(0,H*0.063,W,3);
+
+  ctx.font = `400 ${W*0.022}px DM Mono, monospace`;
+  ctx.fillStyle = h2a(col.c, 0.85); ctx.textAlign = 'center'; ctx.textBaseline = 'alphabetic';
+  ctx.fillText('◉  CONFERÊNCIA', W/2, H*0.048);
+
+  // Title centered
+  if (data.titulo) {
+    const tSz = fitMultiline(ctx, data.titulo, W*0.84, W*0.16, 26);
+    const lines = wrapLines(ctx, data.titulo.toUpperCase(), W*0.84, `800 ${tSz}px Syne, sans-serif`);
+    const startY = H*0.18;
+    lines.forEach((line, i) => {
+      ctx.save(); ctx.globalAlpha = 0.1; ctx.font = `800 ${tSz}px Syne, sans-serif`;
+      ctx.fillStyle = col.c; ctx.textAlign = 'center'; ctx.fillText(line, W/2+4, startY+i*tSz+4); ctx.restore();
+      gradientText(ctx, line, W/2, startY+i*tSz, `800 ${tSz}px Syne, sans-serif`,
+        W/2-W*0.4, startY-tSz, W/2+W*0.4, startY+tSz*0.3, '#FFFFFF', h2a(col.d, 0.85));
+    });
+    // Center rule
+    const rY = startY + lines.length*tSz + H*0.02;
+    ctx.save(); ctx.shadowColor = col.c; ctx.shadowBlur = 14;
+    const rg = ctx.createLinearGradient(W*0.2,0,W*0.8,0);
+    rg.addColorStop(0,'rgba(0,0,0,0)'); rg.addColorStop(0.35,col.c); rg.addColorStop(0.65,col.c); rg.addColorStop(1,'rgba(0,0,0,0)');
+    ctx.fillStyle = rg; ctx.fillRect(W*0.2, rY, W*0.6, 2); ctx.restore();
+  }
+
+  if (data.frase) {
+    const frSz = Math.min(W*0.038, fitText(ctx, data.frase, W*0.75, W*0.038, 16));
+    const frFont = `300 ${frSz}px DM Sans, sans-serif`;
+    const frLines = wrapLines(ctx, data.frase, W*0.73, frFont);
+    ctx.font = frFont; ctx.fillStyle = 'rgba(255,237,222,0.75)';
+    ctx.textAlign = 'center'; ctx.textBaseline = 'alphabetic';
+    frLines.forEach((l,i) => ctx.fillText(l, W/2, H*0.75+i*(frSz*1.4)));
+  }
+
+  if (data.pregadores) {
+    const pSz = fitText(ctx, data.pregadores, W*0.8, W*0.038, 16);
+    ctx.font = `600 ${pSz}px Syne, sans-serif`; ctx.fillStyle = col.c;
+    ctx.textAlign = 'center'; ctx.textBaseline = 'alphabetic';
+    ctx.fillText(data.pregadores.toUpperCase(), W/2, H*0.875);
+  }
+
+  if (data.dataHora) {
+    const dSz = fitText(ctx, data.dataHora, W*0.7, W*0.028, 14);
+    ctx.font = `400 ${dSz}px DM Mono, monospace`; ctx.fillStyle = 'rgba(255,255,255,0.5)';
+    ctx.textAlign = 'center'; ctx.textBaseline = 'alphabetic';
+    ctx.fillText(data.dataHora.toUpperCase(), W/2, H*0.91);
+  }
+
+  grain(ctx,W,H,0.04); dnaBar(ctx,W,H,col,4); watermark(ctx,W,H);
+}
+
+// ══════════════════════════════════════════════════════════════════
+// STYLE: MAGAZINE (editorial layered, like Sunday Service posts)
+// ══════════════════════════════════════════════════════════════════
+function drawMagazine(C, W, H, images, data, col) {
+  const ctx = C.getContext('2d');
+  ctx.clearRect(0, 0, W, H);
+
+  ctx.fillStyle = '#080200'; ctx.fillRect(0,0,W,H);
+
+  // Diagonal color block
+  const triG = ctx.createLinearGradient(0,0,W*0.75,H*0.5);
+  triG.addColorStop(0, h2a(col.a, 0.95)); triG.addColorStop(1, h2a(col.b, 0.45));
+  ctx.fillStyle = triG;
+  ctx.beginPath(); ctx.moveTo(0,0); ctx.lineTo(W*0.82,0); ctx.lineTo(0,H*0.62); ctx.closePath(); ctx.fill();
+
+  // Diagonal stripes
+  ctx.save(); ctx.strokeStyle = h2a(col.c, 0.06); ctx.lineWidth = 1;
+  for (let i = -H; i < W+H; i += 28) { ctx.beginPath(); ctx.moveTo(i,0); ctx.lineTo(i+H,H); ctx.stroke(); }
+  ctx.restore();
+
+  // Photo bottom
+  if (images.length > 0) {
+    ctx.save(); placePhotos(ctx, W, H, images, 'bottom'); ctx.restore();
+    const fade = ctx.createLinearGradient(0,H*0.28,0,H);
+    fade.addColorStop(0, h2a(col.dk||'#080200', 0.88));
+    fade.addColorStop(0.45, h2a(col.dk||'#080200', 0.2));
+    fade.addColorStop(1, h2a(col.dk||'#080200', 0.78));
+    ctx.fillStyle = fade; ctx.fillRect(0,0,W,H);
+  }
+
+  // BG word
+  ctx.save(); ctx.globalAlpha = 0.05;
+  ctx.font = `800 ${W*0.5}px Syne, sans-serif`; ctx.fillStyle = col.d;
+  ctx.textAlign = 'center'; ctx.fillText((data.titulo||'').split(' ')[0], W/2, H*0.52); ctx.restore();
+
+  // Issue label
+  ctx.font = `500 ${W*0.022}px DM Mono, monospace`; ctx.fillStyle = h2a(col.c, 0.9);
+  ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
+  ctx.fillText('EDIÇÃO ESPECIAL', W*0.065, H*0.065);
+  ctx.fillStyle = col.c; ctx.fillRect(W*0.065, H*0.072, W*0.1, 3);
+
+  // Layered title words alternate style
+  if (data.titulo) {
+    const words = data.titulo.split(' ');
+    let ly = H*0.12;
+    words.forEach((word, i) => {
+      const bigSz = fitText(ctx, word, W*0.87, W*0.19, 24);
+      const fSz = i % 2 === 0 ? bigSz : bigSz * 0.82;
+      if (i % 2 === 0) {
+        gradientText(ctx, word.toUpperCase(), W*0.065, ly, `800 ${fSz}px Syne, sans-serif`,
+          W*0.065, ly-fSz, W*0.85, ly, '#FFFFFF', h2a(col.d, 0.8));
+      } else {
+        ctx.font = `800 ${fSz}px Syne, sans-serif`; ctx.fillStyle = h2a(col.c, 0.9);
+        ctx.fillText(word.toUpperCase(), W*0.065, ly);
+      }
+      ly += fSz * 1.0;
+    });
+    ctx.fillStyle = col.c; ctx.fillRect(W*0.055, H*0.11, 4, ly - H*0.11 - 20);
+  }
+
+  if (data.frase) {
+    const frSz = Math.min(W*0.04, fitText(ctx, data.frase, W*0.8, W*0.04, 16));
+    const frFont = `300 ${frSz}px DM Sans, sans-serif`;
+    const frLines = wrapLines(ctx, data.frase, W*0.78, frFont);
+    ctx.font = frFont; ctx.fillStyle = 'rgba(255,237,222,0.82)';
+    ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
+    frLines.forEach((l,i) => ctx.fillText(l, W*0.065, H*0.76+i*(frSz*1.35)));
+  }
+
+  // Bottom info bar
+  const barY = H*0.885;
+  ctx.fillStyle = h2a(col.a, 0.88); ctx.fillRect(0, barY, W, H*0.06);
+  if (data.dataHora) {
+    ctx.font = `600 ${fitText(ctx, data.dataHora, W*0.42, W*0.03, 12)}px DM Sans, sans-serif`;
+    ctx.fillStyle = '#FFFFFF'; ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
+    ctx.fillText(data.dataHora.toUpperCase(), W*0.065, barY+H*0.04);
+  }
+  if (data.pregadores) {
+    ctx.font = `400 ${fitText(ctx, data.pregadores, W*0.36, W*0.026, 12)}px DM Sans, sans-serif`;
+    ctx.fillStyle = h2a(col.d, 0.9); ctx.textAlign = 'right';
+    ctx.fillText(data.pregadores, W-W*0.065, barY+H*0.04);
+  }
+
+  grain(ctx,W,H,0.04); dnaBar(ctx,W,H,col,6); watermark(ctx,W,H);
+}
+
+// ══════════════════════════════════════════════════════════════════
+// STYLE: CLEAN (minimal, like Fernandinho / Semana Profética)
+// ══════════════════════════════════════════════════════════════════
+function drawClean(C, W, H, images, data, col) {
+  const ctx = C.getContext('2d');
+  ctx.clearRect(0, 0, W, H);
+
+  // Soft gradient bg
+  const bg = ctx.createLinearGradient(0,0,W,H);
+  bg.addColorStop(0, h2a(col.a, 0.15)); bg.addColorStop(1, '#080200');
+  ctx.fillStyle = bg; ctx.fillRect(0,0,W,H);
+
+  if (images.length > 0) {
+    ctx.save(); ctx.globalAlpha = 0.65;
+    placePhotos(ctx, W, H, images, 'full');
+    ctx.restore();
+    const ov = ctx.createRadialGradient(W/2, H*0.45, W*0.1, W/2, H*0.45, W*0.85);
+    ov.addColorStop(0,'rgba(8,2,0,0)'); ov.addColorStop(1,'rgba(8,2,0,0.88)');
+    ctx.fillStyle = ov; ctx.fillRect(0,0,W,H);
+    const botB = ctx.createLinearGradient(0,H*0.5,0,H);
+    botB.addColorStop(0,'rgba(0,0,0,0)'); botB.addColorStop(1,'rgba(8,2,0,0.97)');
+    ctx.fillStyle = botB; ctx.fillRect(0,0,W,H);
+  }
+
+  // Accent line top
+  ctx.fillStyle = col.a; ctx.fillRect(W*0.065, H*0.08, W*0.06, 5);
+
+  if (data.titulo) {
+    const tSz = fitMultiline(ctx, data.titulo, W*0.87, W*0.13, 24);
+    const lines = wrapLines(ctx, data.titulo.toUpperCase(), W*0.87, `800 ${tSz}px Syne, sans-serif`);
+    ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
+    lines.forEach((line,i) => {
+      text3D(ctx, line, W*0.065, H*0.12+i*tSz*0.98, `800 ${tSz}px Syne, sans-serif`, '#FFFFFF', 6);
+    });
+  }
+
+  if (data.frase) {
+    const frSz = Math.min(W*0.042, fitText(ctx, data.frase, W*0.84, W*0.042, 16));
+    const frFont = `300 ${frSz}px DM Sans, sans-serif`;
+    const frLines = wrapLines(ctx, data.frase, W*0.84, frFont);
+    ctx.font = frFont; ctx.fillStyle = 'rgba(255,237,222,0.82)';
+    ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
+    frLines.forEach((l,i) => ctx.fillText(l, W*0.065, H*0.73+i*(frSz*1.35)));
+  }
+
+  if (data.pregadores) {
+    ctx.font = `600 ${fitText(ctx, data.pregadores, W*0.85, W*0.038, 16)}px Syne, sans-serif`;
+    ctx.fillStyle = col.c; ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
+    ctx.fillText(data.pregadores.toUpperCase(), W*0.065, H*0.875);
+  }
+
+  if (data.dataHora) {
+    ctx.font = `400 ${W*0.028}px DM Mono, monospace`;
+    ctx.fillStyle = 'rgba(255,255,255,0.5)'; ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
+    ctx.fillText(data.dataHora.toUpperCase(), W*0.065, H*0.91);
+  }
+
+  if (data.local) {
+    ctx.font = `300 ${W*0.022}px DM Sans, sans-serif`;
+    ctx.fillStyle = 'rgba(255,255,255,0.35)'; ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
+    ctx.fillText(data.local, W*0.065, H*0.935);
+  }
+
+  grain(ctx,W,H,0.04); dnaBar(ctx,W,H,col,4); watermark(ctx,W,H);
+}
+
+// ══════════════════════════════════════════════════════════════════
+// STYLE: APOSTÓLICO (dark, rings, Noite Apostólica feel)
+// ══════════════════════════════════════════════════════════════════
+function drawApostolico(C, W, H, images, data, col) {
+  const ctx = C.getContext('2d');
+  ctx.clearRect(0, 0, W, H);
+
+  ctx.fillStyle = '#040108'; ctx.fillRect(0,0,W,H);
+
+  // Radial center glow
+  glow(ctx, W/2, H*0.5, W*0.55, col.a, 0.15);
+  glow(ctx, W/2, H*0.5, W*0.3, col.b, 0.1);
+
+  if (images.length > 0) {
+    ctx.save(); ctx.globalAlpha = 0.6;
+    placePhotos(ctx, W, H, images, 'full');
+    ctx.restore();
+    const ov = ctx.createRadialGradient(W/2,H/2,200,W/2,H/2,W*0.9);
+    ov.addColorStop(0,'rgba(4,1,8,0)'); ov.addColorStop(1,'rgba(4,1,8,0.92)');
+    ctx.fillStyle = ov; ctx.fillRect(0,0,W,H);
+  }
+
+  // Decorative rings center
+  rings(ctx, W/2, H*0.45, col.b, 6, W*0.1);
+  rings(ctx, W*0.1, H*0.2, col.a, 3, W*0.06);
+  rings(ctx, W*0.9, H*0.8, col.c, 3, W*0.07);
+
+  // Date pill top
+  if (data.dataHora) {
+    const pill = data.dataHora.toUpperCase();
+    ctx.font = `600 ${W*0.026}px DM Mono, monospace`;
+    const pw = ctx.measureText(pill).width + W*0.06;
+    ctx.save();
+    ctx.fillStyle = h2a(col.a, 0.15); ctx.strokeStyle = h2a(col.a, 0.4); ctx.lineWidth = 1;
+    ctx.beginPath();
+    if (ctx.roundRect) ctx.roundRect(W*0.065, H*0.055, pw, H*0.042, 99);
+    else ctx.rect(W*0.065, H*0.055, pw, H*0.042);
+    ctx.fill(); ctx.stroke(); ctx.restore();
+    ctx.fillStyle = h2a(col.c, 0.9); ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
+    ctx.fillText(pill, W*0.065 + W*0.03, H*0.055 + H*0.03);
+
+    // QUARTA label right
+    ctx.font = `600 ${W*0.026}px DM Mono, monospace`;
+    ctx.fillStyle = h2a(col.c, 0.7); ctx.textAlign = 'right';
+    ctx.fillText('QUARTA', W-W*0.065, H*0.055 + H*0.03);
+  }
+
+  // Title with script-like secondary word
+  if (data.titulo) {
+    const words = data.titulo.split(' ');
+    let ly = H*0.17;
+    ctx.textAlign = 'center'; ctx.textBaseline = 'alphabetic';
+    words.forEach((word, i) => {
+      const sz = fitText(ctx, word, W*0.88, W*0.22, 24);
+      ctx.font = `800 ${sz}px Syne, sans-serif`;
+      ctx.save();
+      if (i % 2 === 1) { ctx.globalAlpha = 0.75; ctx.transform(1, 0, -0.05, 1, 0, 0); }
+      gradientText(ctx, word.toUpperCase(), W/2, ly, `800 ${sz}px Syne, sans-serif`,
+        W*0.1, ly-sz*0.8, W*0.9, ly+sz*0.2, '#FFFFFF', h2a(col.d, 0.85));
+      ctx.restore();
+      ly += sz * 0.95;
+    });
+  }
+
+  if (data.frase) {
+    const frSz = Math.min(W*0.04, fitText(ctx, data.frase, W*0.78, W*0.04, 16));
+    const frFont = `300 ${frSz}px DM Sans, sans-serif`;
+    const frLines = wrapLines(ctx, data.frase, W*0.76, frFont);
+    ctx.font = frFont; ctx.fillStyle = 'rgba(255,237,222,0.75)';
+    ctx.textAlign = 'center'; ctx.textBaseline = 'alphabetic';
+    frLines.forEach((l,i) => ctx.fillText(l, W/2, H*0.74+i*(frSz*1.4)));
+  }
+
+  // Pregadores bottom
+  if (data.pregadores) {
+    ctx.font = `400 ${W*0.028}px DM Sans, sans-serif`;
+    ctx.fillStyle = h2a(col.c, 0.85); ctx.textAlign = 'center'; ctx.textBaseline = 'alphabetic';
+    ctx.fillText(data.pregadores, W/2, H*0.87);
+  }
+
+  if (data.local) {
+    ctx.font = `300 ${W*0.022}px DM Mono, monospace`;
+    ctx.fillStyle = 'rgba(255,255,255,0.4)'; ctx.textAlign = 'center'; ctx.textBaseline = 'alphabetic';
+    ctx.fillText(data.local.toUpperCase(), W/2, H*0.915);
+  }
+
+  grain(ctx,W,H,0.04); dnaBar(ctx,W,H,col,4); watermark(ctx,W,H);
+}
+
+// ── MAIN DRAW DISPATCHER ─────────────────────────────────────────
+function drawPost(C, W, H, images, data, styleKey, colorKey) {
+  const col = COLORS[colorKey] || COLORS.orange;
+  if (styleKey === 'revival')     drawRevival(C, W, H, images, data, col);
+  else if (styleKey === 'jovens') drawJovens(C, W, H, images, data, col);
+  else if (styleKey === 'conferencia') drawConferencia(C, W, H, images, data, col);
+  else if (styleKey === 'magazine')    drawMagazine(C, W, H, images, data, col);
+  else if (styleKey === 'clean')       drawClean(C, W, H, images, data, col);
+  else if (styleKey === 'apostolico')  drawApostolico(C, W, H, images, data, col);
+  else drawRevival(C, W, H, images, data, col);
+}
+
+</script>
+<script>
+// ══════════════════════════════════════════════════════════════════
+// CHURCH POST GENERATOR — App Controller
+// ══════════════════════════════════════════════════════════════════
+
+// ── STATE ─────────────────────────────────────────────────────────
+let files = [], processedImgs = [];
+let colorKey = 'orange', styleKey = 'revival', fmt = 'post';
+let captionText = '', tagsText = '';
+
+const FMT = { post:{w:1080,h:1350}, story:{w:1080,h:1920}, square:{w:1080,h:1080} };
+
+// ── UPLOAD ────────────────────────────────────────────────────────
+document.getElementById('photoIn').addEventListener('change', e => {
+  Array.from(e.target.files).slice(0, 3 - files.length).forEach(addFile);
+  e.target.value = '';
+});
+
+const uz = document.getElementById('upZ');
+uz.addEventListener('dragover', e => { e.preventDefault(); uz.classList.add('drag'); });
+uz.addEventListener('dragleave', () => uz.classList.remove('drag'));
+uz.addEventListener('drop', e => {
+  e.preventDefault(); uz.classList.remove('drag');
+  Array.from(e.dataTransfer.files)
+    .filter(f => f.type.startsWith('image/'))
+    .slice(0, 3 - files.length)
+    .forEach(addFile);
+});
+
+function addFile(file) {
+  if (!file.type.startsWith('image/') || files.length >= 3) return;
+  files.push(file);
+  renderPreviews();
+}
+
+function removeFile(idx) {
+  files.splice(idx, 1);
+  processedImgs.splice(idx, 1);
+  renderPreviews();
+}
+
+function renderPreviews() {
+  const grid = document.getElementById('prevGrid');
+  grid.innerHTML = '';
+  files.forEach((file, i) => {
+    const url = URL.createObjectURL(file);
+    const el = document.createElement('div');
+    el.className = 'prev-item';
+    el.innerHTML = `<img src="${url}"><button class="rm-btn" onclick="removeFile(${i})">✕</button><span class="st-badge st-p" id="sb${i}">aguardando</span>`;
+    grid.appendChild(el);
+  });
+}
+
+function setStatus(i, cls, txt) {
+  const el = document.getElementById(`sb${i}`);
+  if (el) { el.className = `st-badge ${cls}`; el.textContent = txt; }
+}
+
+// ── PICKERS ───────────────────────────────────────────────────────
+function pickColor(el) {
+  document.querySelectorAll('.sw').forEach(s => s.classList.remove('on'));
+  el.classList.add('on'); colorKey = el.dataset.c;
+}
+function pickStyle(el) {
+  document.querySelectorAll('.s-btn').forEach(s => s.classList.remove('on'));
+  el.classList.add('on'); styleKey = el.dataset.s;
+}
+function setFmt(el) {
+  document.querySelectorAll('.fmt-btn').forEach(b => b.classList.remove('on'));
+  el.classList.add('on'); fmt = el.dataset.f;
+  const {w,h} = FMT[fmt];
+  document.getElementById('sizeInfo').textContent = `${w} × ${h} px`;
+}
+
+// ── STEP PROGRESS ─────────────────────────────────────────────────
+function setStep(idx) {
+  for (let i = 0; i < 4; i++) {
+    const el = document.getElementById(`st${i}`);
+    if (!el) continue;
+    el.className = i < idx ? 'gen-step done' : i === idx ? 'gen-step active' : 'gen-step';
+  }
+}
+
+// ── API HEALTH ────────────────────────────────────────────────────
+async function checkHealth() {
+  try {
+    const r = await fetch('/api/health');
+    const d = await r.json();
+    updatePills(d.env);
+  } catch(e) {}
+}
+
+function updatePills(env) {
+  ['bg','ai'].forEach(k => {
+    const ok = k === 'bg' ? env.removeBg : env.claude;
+    const el = document.getElementById(`pill-${k}`);
+    if (!el) return;
+    el.className = `api-pill ${ok ? 'ok' : 'err'}`;
+    el.innerHTML = `<span class="api-dot"></span>${k === 'bg' ? 'remove.bg' : 'Claude AI'}`;
+  });
+}
+
+checkHealth();
+
+// ── REMOVE BG ─────────────────────────────────────────────────────
+async function removeBg(file, idx) {
+  setStatus(idx, 'st-r', 'removendo...');
+  try {
+    const form = new FormData();
+    form.append('image', file);
+    const r = await fetch('/api/remove-bg', { method: 'POST', body: form });
+    if (!r.ok) throw new Error(await r.text());
+    const blob = await r.blob();
+    const img = new Image();
+    await new Promise((res, rej) => { img.onload = res; img.onerror = rej; img.src = URL.createObjectURL(blob); });
+    setStatus(idx, 'st-d', 'sem fundo ✓');
+    return img;
+  } catch(e) {
+    setStatus(idx, 'st-e', 'original');
+    const img = new Image();
+    await new Promise((res, rej) => { img.onload = res; img.onerror = rej; img.src = URL.createObjectURL(file); });
+    return img;
+  }
+}
+
+// ── CAPTION ───────────────────────────────────────────────────────
+async function generateCaption(data) {
+  try {
+    const r = await fetch('/api/caption', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ pregadores: data.pregadores, data: data.dataHora, tipo: data.tipo, frase: data.frase })
+    });
+    if (!r.ok) throw new Error();
+    return await r.json();
+  } catch(e) {
+    const tipo = data.tipo || 'culto';
+    return {
+      caption: `${data.frase || 'Um encontro que vai transformar sua semana.'}\n\nVenha preparado para receber uma palavra que vai mudar tudo. Deus preparou algo especial para você neste ${tipo}.\n\nTraga alguém especial. Confirmado? Comenta aqui 👇`,
+      tags: '#igrejaevangelica #culto #adoracao #pregacao #fe #revival #igrejabrasil #jesus'
+    };
+  }
+}
+
+// ── GENERATE ──────────────────────────────────────────────────────
+async function generate() {
+  const titulo    = document.getElementById('titulo').value.trim();
+  const tipo      = document.getElementById('tipo').value;
+  const pregadores = document.getElementById('pregadores').value.trim();
+  const dataHora  = document.getElementById('dataHora').value.trim();
+  const local     = document.getElementById('local').value.trim();
+  const frase     = document.getElementById('frase').value.trim();
+
+  if (!files.length) { toast('⚠️ Suba pelo menos uma foto'); return; }
+  if (!titulo)        { toast('⚠️ Adicione o título do evento'); return; }
+
+  setLoading(true); setStep(0);
+  document.getElementById('C').classList.add('gen');
+  document.getElementById('genOv').classList.add('show');
+
+  try {
+    // 1. Remove BG
+    processedImgs = await Promise.all(files.map((f,i) => removeBg(f,i)));
+
+    // 2. Caption
+    setStep(1);
+    const cap = await generateCaption({ pregadores, dataHora, tipo, frase, titulo });
+    captionText = cap.caption; tagsText = cap.tags;
+
+    // 3. Draw
+    setStep(2);
+    await new Promise(r => setTimeout(r, 150));
+    const {w,h} = FMT[fmt];
+    const C = document.getElementById('C');
+    C.width = w; C.height = h;
+
+    setStep(3);
+    const data = {
+      titulo: titulo.toUpperCase(), tipo, pregadores, dataHora, local,
+      frase: frase || captionText.split('\n')[0].replace(/^["'«»]/g,'').trim()
+    };
+    drawPost(C, w, h, processedImgs, data, styleKey, colorKey);
+
+    // 4. Show results
+    document.getElementById('emptySt').classList.add('gone');
+    document.getElementById('capTxt').textContent = captionText;
+    document.getElementById('capTags').textContent = tagsText;
+    document.getElementById('capPanel').style.display = 'block';
+    document.getElementById('liveBadge').classList.add('show');
+    document.getElementById('btnWa').style.display = 'flex';
+    document.getElementById('tbtnWa').style.display = 'flex';
+    toast('✅ Post gerado! Baixe o PNG ou envie pelo WhatsApp.');
+
+  } catch(e) {
+    console.error(e);
+    toast('❌ Erro ao gerar. Verifique o console.');
+  } finally {
+    setLoading(false);
+    document.getElementById('C').classList.remove('gen');
+    document.getElementById('genOv').classList.remove('show');
+  }
+}
+
+function setLoading(on) {
+  const btn = document.getElementById('genBtn');
+  btn.disabled = on;
+  document.getElementById('bIc').style.display = on ? 'none' : 'block';
+  document.getElementById('bSp').style.display = on ? 'block' : 'none';
+  document.getElementById('bTx').textContent = on ? 'Gerando...' : 'Gerar Post com IA';
+}
+
+// ── DOWNLOAD ──────────────────────────────────────────────────────
+function downloadPost() {
+  const C = document.getElementById('C');
+  const a = document.createElement('a');
+  a.download = `post-${styleKey}-${Date.now()}.png`;
+  a.href = C.toDataURL('image/png', 1.0);
+  a.click();
+  toast('⬇ Download iniciado!');
+}
+
+// ── COPY CAPTION ──────────────────────────────────────────────────
+function copyCaption() {
+  if (!captionText) { toast('Gere um post primeiro'); return; }
+  navigator.clipboard.writeText(captionText + '\n\n' + tagsText)
+    .then(() => toast('📋 Legenda copiada!'));
+}
+
+// ── MODAL: API KEYS ───────────────────────────────────────────────
+function openKeys() { document.getElementById('keysModal').classList.add('open'); }
+function closeKeys() { document.getElementById('keysModal').classList.remove('open'); }
+
+function toggleVis(inputId, btn) {
+  const inp = document.getElementById(inputId);
+  const isPass = inp.type === 'password';
+  inp.type = isPass ? 'text' : 'password';
+  btn.textContent = isPass ? '🙈 Ocultar' : '👁 Ver';
+}
+
+async function saveKeys() {
+  const bg  = document.getElementById('keyBg').value.trim();
+  const ai  = document.getElementById('keyClaude').value.trim();
+  const statusEl = document.getElementById('keyStatus');
+
+  statusEl.textContent = 'Salvando...';
+  statusEl.className = 'key-status';
+
+  try {
+    const body = {};
+    if (bg) body.removeBg = bg;
+    if (ai) body.claude = ai;
+
+    const r = await fetch('/api/keys', {
+      method: 'POST', headers: {'Content-Type':'application/json'},
+      body: JSON.stringify(body)
+    });
+    const d = await r.json();
+
+    updatePills(d.env);
+
+    // Mark inputs as set
+    if (bg) { document.getElementById('keyBg').classList.add('set'); document.getElementById('keyBg').type = 'password'; }
+    if (ai) { document.getElementById('keyClaude').classList.add('set'); document.getElementById('keyClaude').type = 'password'; }
+
+    const msgs = [];
+    if (d.env.removeBg) msgs.push('✅ remove.bg ativado');
+    if (d.env.claude)   msgs.push('✅ Claude AI ativado');
+    statusEl.textContent = msgs.join(' · ') || 'Nenhuma chave configurada';
+    statusEl.className = msgs.length ? 'key-status ok' : 'key-status err';
+
+    setTimeout(() => closeKeys(), 1800);
+  } catch(e) {
+    statusEl.textContent = '❌ Erro ao salvar';
+    statusEl.className = 'key-status err';
+  }
+}
+
+// Close modal on background click
+document.getElementById('keysModal').addEventListener('click', e => {
+  if (e.target === e.currentTarget) closeKeys();
+});
+
+// ── MODAL: WHATSAPP ───────────────────────────────────────────────
+function openWa() {
+  if (!captionText) { toast('Gere um post primeiro'); return; }
+  document.getElementById('waPreview').textContent = captionText + '\n\n' + tagsText;
+  const sidebar = document.getElementById('waPhone').value;
+  if (sidebar) document.getElementById('waModalPhone').value = sidebar;
+  document.getElementById('waModal').classList.add('open');
+}
+function closeWa() { document.getElementById('waModal').classList.remove('open'); }
+
+async function sendWa() {
+  const phone = document.getElementById('waModalPhone').value.trim()
+    || document.getElementById('waPhone').value.trim();
+
+  if (!phone) { toast('⚠️ Digite o número de WhatsApp'); return; }
+
+  try {
+    const r = await fetch('/api/whatsapp', {
+      method: 'POST', headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ phone, caption: captionText, tags: tagsText })
+    });
+    const d = await r.json();
+    if (d.link) {
+      window.open(d.link, '_blank');
+      closeWa();
+      toast('📱 WhatsApp aberto! Anexe também o PNG baixado.');
+    }
+  } catch(e) {
+    toast('❌ Erro ao abrir WhatsApp');
+  }
+}
+
+document.getElementById('waModal').addEventListener('click', e => {
+  if (e.target === e.currentTarget) closeWa();
+});
+
+// ── TOAST ─────────────────────────────────────────────────────────
+function toast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2800);
+}
+
+// ── KEYBOARD ──────────────────────────────────────────────────────
+document.addEventListener('keydown', e => {
+  if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') generate();
+  if (e.key === 'Escape') { closeKeys(); closeWa(); }
+});
+
+</script>
+</body>
+</html>
