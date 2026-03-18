@@ -13,19 +13,19 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 // ── SAVE API KEYS (runtime, no restart needed) ────────────────────
 app.post('/api/keys', (req, res) => {
-  const { removeBg, claude } = req.body;
+  const { removeBg, gemini } = req.body;
   if (removeBg !== undefined) process.env.REMOVE_BG_API_KEY = removeBg;
-  if (claude   !== undefined) process.env.ANTHROPIC_API_KEY  = claude;
+  if (gemini   !== undefined) process.env.GEMINI_API_KEY    = gemini;
   res.json({ ok: true, env: {
     removeBg: !!process.env.REMOVE_BG_API_KEY,
-    claude:   !!process.env.ANTHROPIC_API_KEY
+    gemini:   !!process.env.GEMINI_API_KEY
   }});
 });
 
 // ── HEALTH ────────────────────────────────────────────────────────
 app.get('/api/health', (_, res) => res.json({ ok: true, env: {
   removeBg: !!process.env.REMOVE_BG_API_KEY,
-  claude:   !!process.env.ANTHROPIC_API_KEY,
+  gemini:   !!process.env.GEMINI_API_KEY,
 }}));
 
 // ── REMOVE BG ─────────────────────────────────────────────────────
@@ -47,10 +47,10 @@ app.post('/api/remove-bg', upload.single('image'), async (req, res) => {
   }
 });
 
-// ── CAPTION (Claude) ──────────────────────────────────────────────
+// ── CAPTION (Google Gemini — GRÁTIS) ─────────────────────────────
 app.post('/api/caption', async (req, res) => {
-  const key = process.env.ANTHROPIC_API_KEY;
-  if (!key) return res.status(400).json({ error: 'ANTHROPIC_API_KEY não configurada' });
+  const key = process.env.GEMINI_API_KEY;
+  if (!key) return res.status(400).json({ error: 'GEMINI_API_KEY não configurada' });
   const { pregadores, data, tipo, frase } = req.body;
   try {
     const prompt = `Você é copywriter especialista em comunicação evangélica brasileira.
@@ -62,11 +62,16 @@ ${frase ? `- Tema: "${frase}"` : ''}
 Tom: inspirador, peso espiritual, 3-4 parágrafos curtos, máx 160 palavras, 1-2 emojis naturais, última linha = chamada à ação.
 Sem hashtags no corpo. Após a legenda escreva HASHTAGS: e liste 8 hashtags evangélicas.
 Responda APENAS legenda + HASHTAGS.`;
-    const r = await axios.post('https://api.anthropic.com/v1/messages', {
-      model: 'claude-sonnet-4-20250514', max_tokens: 600,
-      messages: [{ role: 'user', content: prompt }]
-    }, { headers: { 'x-api-key': key, 'anthropic-version': '2023-06-01', 'content-type': 'application/json' }});
-    const full  = r.data.content[0].text;
+
+    const r = await axios.post(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${key}`,
+      {
+        contents: [{ parts: [{ text: prompt }] }]
+      },
+      { headers: { 'Content-Type': 'application/json' } }
+    );
+
+    const full  = r.data.candidates[0].content.parts[0].text;
     const parts = full.split('HASHTAGS:');
     res.json({ caption: parts[0].trim(), tags: (parts[1] || '').trim() });
   } catch (err) {
@@ -74,12 +79,10 @@ Responda APENAS legenda + HASHTAGS.`;
   }
 });
 
-// ── WHATSAPP (wa.me link + opcional Evolution API) ─────────────────
+// ── WHATSAPP (wa.me link) ──────────────────────────────────────────
 app.post('/api/whatsapp', async (req, res) => {
   const { phone, caption, tags } = req.body;
   if (!phone) return res.status(400).json({ error: 'Número de telefone obrigatório' });
-
-  // Limpa número: remove tudo que não é dígito
   const clean = phone.replace(/\D/g, '');
   const text  = encodeURIComponent((caption || '') + '\n\n' + (tags || ''));
   const link  = `https://wa.me/${clean}?text=${text}`;
